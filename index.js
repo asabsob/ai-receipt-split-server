@@ -9,10 +9,10 @@ const QRCode = require("qrcode");
 const { parseReceiptWithGPT } = require("./aiParser");
 
 const app = express();
-const PORT = 5000;
+const PORT = process.env.PORT || 5000;
 const upload = multer({ dest: "uploads/" });
 
-app.use(cors());
+app.use(cors({ origin: "*" })); // Or your frontend domain
 app.use(express.json());
 
 let receipts = {};
@@ -28,7 +28,10 @@ app.post("/upload", upload.single("receipt"), async (req, res) => {
     const receiptId = uuidv4();
     receipts[receiptId] = { id: receiptId, items };
 
-    const qrUrl = `http://localhost:3000/receipt/${receiptId}`;
+    
+const origin = req.headers.origin || `http://localhost:3000`;
+const qrUrl = `${origin}/receipt/${receiptId}`;
+
     const qrCode = await QRCode.toDataURL(qrUrl);
 
     res.json({ receiptId, items, qrCode, qrUrl });
